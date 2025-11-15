@@ -49,30 +49,31 @@ export const registerUser = async (req, res) => {
 // controller for user login
 // POST: /api/users/login
 export const loginUser = async (req, res) => {
-    try {
-        const { email, password} = req.body;
+  try {
+    const { email, password } = req.body;
 
-        // check if user exists
-        const user = await User.findOne({email})
-        if(!user){
-            return res.status(400).json({message: 'Invalid email or password'})
-        }
-
-        // check if password is correct
-        if(!user.comparePassword(password)){
-            return res.status(400).json({message: 'Invalid email or password'})
-        }
-
-        // return success message
-         const token = generateToken(user._id)
-         user.password = undefined;
-
-         return res.status(200).json({message: 'Login successful', token, user})
-
-    } catch (error) {
-        return res.status(400).json({message: error.message})
+    // check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
-}
+
+    // check if password is correct
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // return success message
+    const token = generateToken(user._id);
+    user.password = undefined;
+
+    return res.status(200).json({ message: 'Login successful', token, user });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+};
+
 
 // controller for getting user by id
 // GET: /api/users/data
